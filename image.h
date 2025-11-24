@@ -7,10 +7,34 @@
 #include <utility>
 #include <stdexcept>
 #include <ostream>
+#include <limits>
+#include <type_traits>
 
 template <typename T>
 class GrayscaleImage {
 private:
+    T saturate_add(T a, T b) const {
+        if constexpr (std::is_integral_v<T> && std::is_signed_v<T>) {
+            if (b > 0 && a > std::numeric_limits<T>::max() - b) return std::numeric_limits<T>::max();
+            if (b < 0 && a < std::numeric_limits<T>::lowest() + b) return std::numeric_limits<T>::lowest();
+        }
+        if constexpr (std::is_integral_v<T> && !std::is_signed_v<T>) {
+            if (a > std::numeric_limits<T>::max() - b) return std::numeric_limits<T>::max();
+        }
+        if constexpr (std::is_floating_point_v<T>) {
+            // для float просто считаем, переполнения нет
+        }
+        return a + b;
+    }
+
+    T saturate_mul(T a, T b) const {
+        if constexpr (std::is_integral_v<T> && std::is_signed_v<T>) {
+            if (b != 0 && a > std::numeric_limits<T>::max() / b) return std::numeric_limits<T>::max();
+            if (b != 0 && a < std::numeric_limits<T>::lowest() / b) return std::numeric_limits<T>::lowest();
+        }
+        return a * b;
+    }
+
     T* data_;
     std::size_t rows_;
     std::size_t cols_;
