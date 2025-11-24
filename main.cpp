@@ -15,22 +15,24 @@ GrayscaleImage<T> average_images(const std::vector<GrayscaleImage<T>>& imgs) {
     }
 
     GrayscaleImage<T> result(max_r, max_c);
+    GrayscaleImage<double> sum(max_r, max_c);
     std::vector<double> count(max_r * max_c, 0.0);
 
     for (const auto& img : imgs) {
         for (std::size_t i = 0; i < img.rows(); ++i) {
             for (std::size_t j = 0; j < img.cols(); ++j) {
                 std::size_t idx = i * max_c + j;
-                result.data_[idx] += static_cast<double>(img(i, j));
-                count[idx] += 1.0;
+                sum(i, j) += static_cast<double>(img(i, j));
+                count[i * max_c + j]++;
             }
         }
     }
 
-    for (std::size_t i = 0; i < max_r * max_c; ++i) {
-        if (count[i] > 0) {
-            double avg = result.data_[i] / count[i];
-            result.data_[i] = static_cast<T>(avg);
+    for (std::size_t i = 0; i < max_r; ++i) {
+        for (std::size_t j = 0; j < max_c; ++j) {
+            if (count[i * max_c + j] > 0) {
+                result(i, j) = static_cast<T>(sum(i, j) / count[i * max_c + j]);
+            }
         }
     }
     return result;
@@ -66,13 +68,11 @@ int main() {
         std::cout << "fill_factor sum: " << sum.fill_factor() << "\n";
 
         // Задача: average_images вне класса
-        std::vector<GrayscaleImage<float>> images = {
-            GrayscaleImage<float>(1,1)(0,0) = 0.0f,
-            GrayscaleImage<float>(1,1)(0,0) = 1.0f,
-            GrayscaleImage<float>(1,1)(0,0) = 0.5f
-        };
+        GrayscaleImage<float> i1(1, 1); i1(0, 0) = 0.0f;
+        GrayscaleImage<float> i2(1, 1); i2(0, 0) = 1.0f;
+        GrayscaleImage<float> i3(1, 1); i3(0, 0) = 0.5f;
 
-        auto avg = average_images(images);
+        auto avg = average_images(std::vector<GrayscaleImage<float>>{i1, i2, i3});
         std::cout << "average of three 1x1 images:\n" << avg << "\n";
 
     } catch (const std::exception& e) {
