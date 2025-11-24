@@ -3,6 +3,39 @@
 #include <iomanip>
 #include <vector>
 
+// === ЗАДАЧА: усреднение массива изображений (вне класса) ===
+template <typename T>
+GrayscaleImage<T> average_images(const std::vector<GrayscaleImage<T>>& imgs) {
+    if (imgs.empty()) return GrayscaleImage<T>();
+
+    std::size_t max_r = 0, max_c = 0;
+    for (const auto& img : imgs) {
+        max_r = std::max(max_r, img.rows());
+        max_c = std::max(max_c, img.cols());
+    }
+
+    GrayscaleImage<T> result(max_r, max_c);
+    std::vector<double> count(max_r * max_c, 0.0);
+
+    for (const auto& img : imgs) {
+        for (std::size_t i = 0; i < img.rows(); ++i) {
+            for (std::size_t j = 0; j < img.cols(); ++j) {
+                std::size_t idx = i * max_c + j;
+                result.data_[idx] += static_cast<double>(img(i, j));
+                count[idx] += 1.0;
+            }
+        }
+    }
+
+    for (std::size_t i = 0; i < max_r * max_c; ++i) {
+        if (count[i] > 0) {
+            double avg = result.data_[i] / count[i];
+            result.data_[i] = static_cast<T>(avg);
+        }
+    }
+    return result;
+}
+
 int main() {
     try {
         // Демонстрация разных типов
