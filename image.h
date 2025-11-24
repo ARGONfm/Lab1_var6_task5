@@ -13,6 +13,11 @@
 template <typename T>
 class GrayscaleImage {
 private:
+    T* data_;
+    std::size_t rows_;
+    std::size_t cols_;
+    
+    // === НАСЫЩЕНИЕ ===
     T saturate_add(T a, T b) const {
         if constexpr (std::is_integral_v<T> && std::is_signed_v<T>) {
             if (b > 0 && a > std::numeric_limits<T>::max() - b) return std::numeric_limits<T>::max();
@@ -34,10 +39,6 @@ private:
         }
         return a * b;
     }
-
-    T* data_;
-    std::size_t rows_;
-    std::size_t cols_;
 
 public:
     // Конструктор, деструктор, Rule of Five
@@ -113,6 +114,45 @@ public:
         }
         return os;
     }
+    // === ОПЕРАТОРЫ + И * ===
+    GrayscaleImage operator+(const GrayscaleImage& other) const {
+        std::size_t nr = std::max(rows_, other.rows_);
+        std::size_t nc = std::max(cols_, other.cols_);
+        GrayscaleImage result(nr, nc);
+
+        for (std::size_t i = 0; i < nr; ++i) {
+            for (std::size_t j = 0; j < nc; ++j) {
+                T a = (i < rows_ && j < cols_) ? (*this)(i, j) : T{0};
+                T b = (i < other.rows_ && j < other.cols_) ? other(i, j) : T{0};
+
+                if constexpr (std::is_same_v<T, bool>)
+                    result(i, j) = a || b;
+                else
+                    result(i, j) = saturate_add(a, b);
+            }
+        }
+        return result;
+    }
+
+    GrayscaleImage operator*(const GrayscaleImage& other) const {
+        std::size_t nr = std::max(rows_, other.rows_);
+        std::size_t nc = std::max(cols_, other.cols_);
+        GrayscaleImage result(nr, nc);
+
+        for (std::size_t i = 0; i < nr; ++i) {
+            for (std::size_t j = 0; j < nc; ++j) {
+                T a = (i < rows_ && j < cols_) ? (*this)(i, j) : T{0};
+                T b = (i < other.rows_ && j < other.cols_) ? other(i, j) : T{0};
+
+                if constexpr (std::is_same_v<T, bool>)
+                    result(i, j) = a && b;
+                else
+                    result(i, j) = saturate_mul(a, b);
+            }
+        }
+        return result;
+    }
+
 
     
     std::size_t rows() const { return rows_; }
