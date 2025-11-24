@@ -9,6 +9,7 @@
 #include <ostream>
 #include <limits>
 #include <type_traits>
+#include <cmath> 
 
 template <typename T>
 class GrayscaleImage {
@@ -178,6 +179,45 @@ public:
         return result;
     }
     
+    // === КОЭФФИЦИЕНТ ЗАПОЛНЕННОСТИ ===
+    double fill_factor() const {
+        if (rows_ == 0 || cols_ == 0) return 0.0;
+
+        double sum = 0.0;
+        double max_val = 1.0;
+
+        if constexpr (std::is_same_v<T, bool> || std::is_same_v<T, float>)
+            max_val = 1.0;
+        else
+            max_val = static_cast<double>(std::numeric_limits<T>::max());
+
+        for (std::size_t i = 0; i < rows_ * cols_; ++i) {
+            sum += static_cast<double>(data_[i]);
+        }
+        return sum / (rows_ * cols_ * max_val);
+    }
+
+    // === СРАВНЕНИЕ С ЭПСИЛОН ===
+    bool operator==(const GrayscaleImage& other) const {
+        if (rows_ != other.rows_ || cols_ != other.cols_) return false;
+
+        constexpr double EPS = 1e-6;
+        for (std::size_t i = 0; i < rows_ * cols_; ++i) {
+            if constexpr (std::is_floating_point_v<T>) {
+                if (std::abs(static_cast<double>(data_[i]) - static_cast<double>(other.data_[i])) > EPS)
+                    return false;
+            } else {
+                if (data_[i] != other.data_[i])
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    bool operator!=(const GrayscaleImage& other) const {
+        return !(*this == other);
+    }
+
     std::size_t rows() const { return rows_; }
     std::size_t cols() const { return cols_; }
 };
