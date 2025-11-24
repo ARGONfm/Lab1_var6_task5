@@ -166,6 +166,17 @@ public:
         }
         return result;
     }
+
+    // === ПОВОРОТ НА 180° ===
+    GrayscaleImage rotated180() const {
+        GrayscaleImage result(rows_, cols_);
+        for (std::size_t i = 0; i < rows_; ++i) {
+            for (std::size_t j = 0; j < cols_; ++j) {
+                result(i, j) = (*this)(rows_ - 1 - i, cols_ - 1 - j);
+            }
+        }
+        return result;
+    }
     
     std::size_t rows() const { return rows_; }
     std::size_t cols() const { return cols_; }
