@@ -153,7 +153,19 @@ public:
         return result;
     }
 
-
+    // === ИНВЕРСИЯ ===
+    GrayscaleImage operator!() const {
+        GrayscaleImage result(*this);
+        for (std::size_t i = 0; i < rows_ * cols_; ++i) {
+            if constexpr (std::is_same_v<T, bool>)
+                result.data_[i] = !result.data_[i];
+            else if constexpr (std::is_same_v<T, float>)
+                result.data_[i] = 1.0f - result.data_[i];
+            else
+                result.data_[i] = -result.data_[i];
+        }
+        return result;
+    }
     
     std::size_t rows() const { return rows_; }
     std::size_t cols() const { return cols_; }
