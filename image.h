@@ -17,10 +17,12 @@ private:
 
 public:
     // Конструктор, деструктор, Rule of Five
-    GrayscaleImage(std::size_t rows = 0, std::size_t cols = 0);
-    
-        : data_(rows && cols ? new T[rows * cols] : nullptr)
-        , rows_(rows), cols_(cols) {}
+    GrayscaleImage(std::size_t rows = 0, std::size_t cols = 0)
+        : data_(nullptr), rows_(rows), cols_(cols_) {
+        if (rows_ && cols_) {
+            data_ = new T[rows_ * cols_]{};
+        }
+    }
 
     ~GrayscaleImage() { delete[] data_; }
 
@@ -63,9 +65,32 @@ public:
         }
         return *this;
     }
+    // === ОПЕРАТОР ДОСТУПА (r, c) ===
+    T& operator()(std::size_t r, std::size_t c) {
+        if (r >= rows_ || c >= cols_)
+            throw std::out_of_range("GrayscaleImage: index out of range");
+        return data_[r * cols_ + c];
+    }
+
+    const T& operator()(std::size_t r, std::size_t c) const {
+        if (r >= rows_ || c >= cols_)
+            throw std::out_of_range("GrayscaleImage: index out of range");
+        return data_[r * cols_ + c];
+    }
+
+    // === ВЫВОД В ПОТОК ===
+    friend std::ostream& operator<<(std::ostream& os, const GrayscaleImage& img) {
+        for (std::size_t i = 0; i < img.rows_; ++i) {
+            for (std::size_t j = 0; j < img.cols_; ++j) {
+                if (j > 0) os << ' ';
+                os << static_cast<double>(img(i, j));
+            }
+            os << '\n';
+        }
+        return os;
+    }
 
     
-
     std::size_t rows() const { return rows_; }
     std::size_t cols() const { return cols_; }
 };
